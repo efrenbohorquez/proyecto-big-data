@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: proyecto-big-data
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: SECRET_KEY
+        generateValue: true
+      - key: MONGO_URI
+        sync: false
+      - key: MONGO_DB
+        sync: false
+      - key: MONGO_COLLECTION
+        sync: false
+      - key: ELASTIC_CLOUD_URL
+        sync: false
+      - key: ELASTIC_API_KEY
+        sync: false
