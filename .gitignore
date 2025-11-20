@@ -1,0 +1,79 @@
+# Archivos de entorno y configuración sensible
+.env
+.env.local
+.env.production
+
+# Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.pyc
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Logs
+*.log
+logs/
+
+# Base de datos local
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos temporales y de prueba
+temp/
+tmp/
+test_output/
+
+# Uploads (descomentar si no quieres versionar los archivos subidos)
+# uploads/
+# !uploads/.gitkeep
+
+# Documentos descargados
+uploads/*.json
+uploads/*.pdf
+uploads/*.docx
+uploads/*.zip
+uploads/documentos_procuraduria/
+
+# Reportes generados
+reporte_*.json
+reporte_*.html
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# pytest
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json

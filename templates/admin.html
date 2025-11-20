@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin - Proyecto Big Data</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+      }
+      .card {
+        transition: transform 0.2s;
+      }
+      .card:hover {
+        transform: scale(1.05);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand" href="#">Panel de Administración</a>
+        <div class="navbar-nav ms-auto">
+          <a class="nav-link" href="/">Inicio</a>
+          <a class="nav-link" href="/logout">Cerrar Sesión</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-5">
+      <h2 class="text-center mb-4">Bienvenido, {{ username }}!</h2>
+      <p class="text-center text-muted">Versión: {{ version }}</p>
+
+      {% if error %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+      {% endif %}
+
+      <!-- Estadísticas del Sistema -->
+      {% if estadisticas %}
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card bg-primary text-white">
+            <div class="card-body">
+              <h4 class="card-title">📊 Estadísticas del Sistema</h4>
+              <div class="row mt-3">
+                <div class="col-md-3">
+                  <div class="text-center">
+                    <h2>{{ estadisticas.total_documentos }}</h2>
+                    <p>Total Documentos</p>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="text-center">
+                    <h2>{{ estadisticas.categorias|length }}</h2>
+                    <p>Categorías</p>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="text-center">
+                    <h2>{{ estadisticas.tipos|length }}</h2>
+                    <p>Tipos de Archivo</p>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="text-center">
+                    <h2>{{ "%.2f"|format(estadisticas.tamano_total) }} MB</h2>
+                    <p>Tamaño Total</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categorías -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">📁 Documentos por Categoría</h5>
+              <div class="table-responsive">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>Categoría</th>
+                      <th>Cantidad</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for cat in estadisticas.categorias %}
+                    <tr>
+                      <td>{{ cat.nombre or 'Sin categoría' }}</td>
+                      <td>
+                        <span class="badge bg-primary">{{ cat.cantidad }}</span>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Módulos de Gestión -->
+      <h4 class="mb-3">🛠️ Módulos de Gestión</h4>
+      <div class="row">
+        <div class="col-md-3 mb-4">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <h5 class="card-title">📄 Documentos</h5>
+              <p class="card-text">Buscar y gestionar documentos</p>
+              <a href="/documentos" class="btn btn-primary">Ir</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-4">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <h5 class="card-title">👥 Usuarios</h5>
+              <p class="card-text">Gestionar usuarios del sistema</p>
+              <a href="#" class="btn btn-secondary disabled">Próximamente</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-4">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <h5 class="card-title">🔍 ElasticSearch</h5>
+              <p class="card-text">Administrar índices</p>
+              <a href="#" class="btn btn-secondary disabled">Próximamente</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-4">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <h5 class="card-title">📤 Cargar Datos</h5>
+              <p class="card-text">Subir documentos nuevos</p>
+              <a href="#" class="btn btn-secondary disabled">Próximamente</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
