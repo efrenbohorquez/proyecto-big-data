@@ -187,7 +187,7 @@ def api_buscar_documentos():
             sort_config = [('fecha_descarga', -1)]
 
         from_doc = (pagina - 1) * por_pagina
-        documentos, total = mongo_db.buscar_documentos(query, categoria, tipo, from_doc, por_pagina, sort_config)
+        documentos, total = mongo_db.buscar_documentos_con_snippets(query, categoria, tipo, from_doc, por_pagina, sort_config)
         
         total_paginas = math.ceil(total / por_pagina)
         

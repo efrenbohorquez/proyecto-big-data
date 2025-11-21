@@ -6,6 +6,8 @@ from typing import Any, Dict, List, Optional
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, PyMongoError
 
+from helpers.text_utils import generar_snippet, resaltar_texto
+
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -101,6 +103,39 @@ class Mongo_DB:
             return documentos, total
         except PyMongoError as e:
             logger.error(f"Error en búsqueda: {e}")
+            return [], 0
+
+    def buscar_documentos_con_snippets(self, query: str, categoria: str, tipo: str, skip: int, limit: int, sort_config: List[tuple]) -> tuple[List[Dict], int]:
+        """Busca documentos y genera snippets del contenido con la palabra resaltada."""
+        try:
+            # Realizar búsqueda normal
+            documentos, total = self.buscar_documentos(query, categoria, tipo, skip, limit, sort_config)
+            
+            # Agregar snippets si hay query de búsqueda
+            if query:
+                for doc in documentos:
+                    texto_contenido = doc.get('texto_contenido', '')
+                    if texto_contenido:
+                        # Generar snippet con contexto
+                        snippet = generar_snippet(texto_contenido, query, max_length=250)
+                        # Resaltar la palabra buscada
+                        snippet_resaltado = resaltar_texto(snippet, query)
+                        doc['snippet'] = snippet_resaltado
+                    else:
+                        doc['snippet'] = "No hay contenido de texto disponible."
+            else:
+                # Si no hay query, mostrar preview del contenido
+                for doc in documentos:
+                    texto_contenido = doc.get('texto_contenido', '')
+                    if texto_contenido:
+                        doc['snippet'] = texto_contenido[:200] + "..." if len(texto_contenido) > 200 else texto_contenido
+                    else:
+                        doc['snippet'] = "No hay contenido de texto disponible."
+            
+            return documentos, total
+            
+        except Exception as e:
+            logger.error(f"Error al buscar con snippets: {e}")
             return [], 0
 
     def obtener_documento_por_numero(self, numero: int) -> Optional[Dict]:

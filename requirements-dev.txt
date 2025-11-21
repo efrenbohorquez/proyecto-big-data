@@ -1,0 +1,9 @@
+# Dependencias COMPLETAS para desarrollo local
+# Incluye scraping y todas las herramientas
+
+-r requirements-minimal.txt
+
+# Web Scraping & Parsing (solo para desarrollo/scraping)
+beautifulsoup4==4.12.3
+lxml==5.3.0
+soupsieve==2.6

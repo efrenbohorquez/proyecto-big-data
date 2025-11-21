@@ -1,461 +1,451 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Búsqueda de Documentos - Proyecto Big Data</title>
-    <!-- Bootstrap CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <style>
-      body {
-        background-color: #f8f9fa;
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Búsqueda de Documentos - Proyecto Big Data</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .search-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 0;
+    }
+
+    .card-stat {
+      transition: transform 0.3s;
+    }
+
+    .card-stat:hover {
+      transform: translateY(-5px);
+    }
+
+    .doc-card {
+      border-left: 5px solid #667eea;
+      margin-bottom: 15px;
+    }
+
+    .doc-card:hover {
+      background-color: #f1f3f5;
+    }
+
+    /* Estilos para snippets */
+    .snippet-container {
+      background-color: #f8f9fa;
+      border-left: 4px solid #667eea;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+      font-family: 'Georgia', serif;
+      line-height: 1.6;
+    }
+
+    /* Resaltado de palabras encontradas */
+    mark {
+      background-color: #ffeb3b;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-weight: bold;
+      color: #000;
+    }
+
+    /* Animación para el resaltado */
+    mark {
+      animation: highlight-pulse 1.5s ease-in-out;
+    }
+
+    @keyframes highlight-pulse {
+
+      0%,
+      100% {
+        background-color: #ffeb3b;
       }
-      .search-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 40px 0;
+
+      50% {
+        background-color: #ffd700;
       }
-      .card-stat {
-        transition: transform 0.3s;
-      }
-      .card-stat:hover {
-        transform: translateY(-5px);
-      }
-      .doc-card {
-        border-left: 5px solid #667eea;
-        margin-bottom: 15px;
-      }
-      .doc-card:hover {
-        background-color: #f1f3f5;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container">
-        <a class="navbar-brand" href="/">Proyecto Big Data</a>
-        <div class="navbar-nav ms-auto">
-          <a class="nav-link active" href="/documentos">Buscar Documentos</a>
-          <a class="nav-link" href="/login">Ingresar</a>
-          <a class="nav-link" href="/about">Acerca de</a>
-        </div>
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">Proyecto Big Data</a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link active" href="/documentos">Buscar Documentos</a>
+        <a class="nav-link" href="/login">Ingresar</a>
+        <a class="nav-link" href="/about">Acerca de</a>
       </div>
-    </nav>
+    </div>
+  </nav>
 
-    <!-- Search Header -->
-    <section class="search-header text-center">
-      <div class="container">
-        <h2>Buscador Inteligente de Documentos</h2>
-        <p class="mb-4">
-          Explora la base de datos de la Procuraduría con tecnología
-          ElasticSearch
-        </p>
+  <!-- Search Header -->
+  <section class="search-header text-center">
+    <div class="container">
+      <h2>Buscador Inteligente de Documentos</h2>
+      <p class="mb-4">
+        Explora la base de datos de la Procuraduría con tecnología
+        ElasticSearch
+      </p>
 
-        <div class="row justify-content-center">
-          <div class="col-md-8">
-            <div class="input-group mb-3">
-              <input
-                type="text"
-                id="searchInput"
-                class="form-control form-control-lg"
-                placeholder="Buscar por título, contenido o palabras clave..."
-              />
-              <button
-                class="btn btn-success"
-                type="button"
-                onclick="buscarDocumentos()"
-              >
-                <i class="fas fa-search"></i> Buscar
-              </button>
-            </div>
-            <div class="d-flex justify-content-center gap-3">
-              <select id="filtroCategoria" class="form-select w-auto">
-                <option value="">Todas las Categorías</option>
-                {% for cat in estadisticas.categorias %}
-                <option value="{{ cat.nombre }}">
-                  {{ cat.nombre }} ({{ cat.cantidad }})
-                </option>
-                {% endfor %}
-              </select>
-              <select id="filtroTipo" class="form-select w-auto">
-                <option value="">Todos los Tipos</option>
-                {% for tipo in estadisticas.tipos %}
-                <option value="{{ tipo }}">{{ tipo }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Statistics Section -->
-    <section class="py-4">
-      <div class="container">
-        <div class="row text-center">
-          <div class="col-md-3">
-            <div class="card card-stat shadow-sm">
-              <div class="card-body">
-                <h3 class="text-primary">
-                  {{ estadisticas.total_documentos }}
-                </h3>
-                <p class="text-muted">Documentos Totales</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card card-stat shadow-sm">
-              <div class="card-body">
-                <h3 class="text-success">
-                  {{ estadisticas.categorias|length }}
-                </h3>
-                <p class="text-muted">Categorías</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card card-stat shadow-sm">
-              <div class="card-body">
-                <h3 class="text-info">{{ estadisticas.tipos|length }}</h3>
-                <p class="text-muted">Tipos de Archivo</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card card-stat shadow-sm">
-              <div class="card-body">
-                <h3 class="text-warning">
-                  {{ (estadisticas.tamano_total / 1024)|round(2) }} GB
-                </h3>
-                <p class="text-muted">Tamaño Total</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Results Section -->
-    <section class="py-4 bg-light">
-      <div class="container">
-        <h3 class="mb-4" id="tituloResultados">Documentos Recientes</h3>
-        <div id="listaResultados">
-          {% for doc in documentos_recientes %}
-          <div class="card doc-card shadow-sm">
-            <div class="card-body">
-              <h5 class="card-title text-primary">
-                <a
-                  href="{{ doc.url }}"
-                  target="_blank"
-                  class="text-decoration-none"
-                  >{{ doc.titulo }}</a
-                >
-              </h5>
-              <h6 class="card-subtitle mb-2 text-muted">
-                <span class="badge bg-secondary">{{ doc.tipo }}</span>
-                <span class="badge bg-info text-dark"
-                  >{{ doc.metadatos.categoria }}</span
-                >
-                <small class="ms-2"
-                  ><i class="far fa-calendar-alt"></i> {{ doc.fecha_descarga
-                  }}</small
-                >
-              </h6>
-              <p class="card-text text-truncate">
-                {{ doc.texto_contenido[:200] if doc.texto_contenido else 'Sin
-                contenido disponible' }}...
-              </p>
-              <button
-                onclick="verDetallesDocumento({{ doc.numero }})"
-                class="btn btn-sm btn-outline-primary"
-              >
-                <i class="fas fa-eye"></i> Ver Detalles
-              </button>
-              {% if doc.url_original %}
-              <a
-                href="{{ doc.url_original }}"
-                target="_blank"
-                class="btn btn-sm btn-outline-success"
-              >
-                <i class="fas fa-external-link-alt"></i> Ver Original
-              </a>
-              {% endif %}
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-
-        <!-- Pagination -->
-        <nav aria-label="Navegación" class="mt-4">
-          <ul class="pagination justify-content-center" id="paginacion">
-            <!-- Generated by JS -->
-          </ul>
-        </nav>
-      </div>
-    </section>
-
-    <!-- Modal para Detalles del Documento -->
-    <div
-      class="modal fade"
-      id="modalDetalles"
-      tabindex="-1"
-      aria-labelledby="modalDetallesLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="modalDetallesLabel">
-              Detalles del Documento
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body" id="modalDetallesContenido">
-            <div class="text-center">
-              <div class="spinner-border" role="status"></div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Cerrar
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="input-group mb-3">
+            <input type="text" id="searchInput" class="form-control form-control-lg"
+              placeholder="Buscar por título, contenido o palabras clave..." />
+            <button class="btn btn-success" type="button" onclick="buscarDocumentos()">
+              <i class="fas fa-search"></i> Buscar
             </button>
+          </div>
+          <div class="d-flex justify-content-center gap-3">
+            <select id="filtroCategoria" class="form-select w-auto">
+              <option value="">Todas las Categorías</option>
+              {% for cat in estadisticas.categorias %}
+              <option value="{{ cat.nombre }}">
+                {{ cat.nombre }} ({{ cat.cantidad }})
+              </option>
+              {% endfor %}
+            </select>
+            <select id="filtroTipo" class="form-select w-auto">
+              <option value="">Todos los Tipos</option>
+              {% for tipo in estadisticas.tipos %}
+              <option value="{{ tipo }}">{{ tipo }}</option>
+              {% endfor %}
+            </select>
           </div>
         </div>
       </div>
     </div>
+  </section>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-3 mt-5">
-      <div class="container">
-        <p>
-          &copy; 2025 Proyecto Big Data - {{ universidad }} - Maestría en
-          Analítica
-        </p>
+  <!-- Statistics Section -->
+  <section class="py-4">
+    <div class="container">
+      <div class="row text-center">
+        <div class="col-md-3">
+          <div class="card card-stat shadow-sm">
+            <div class="card-body">
+              <h3 class="text-primary">
+                {{ estadisticas.total_documentos }}
+              </h3>
+              <p class="text-muted">Documentos Totales</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-stat shadow-sm">
+            <div class="card-body">
+              <h3 class="text-success">
+                {{ estadisticas.categorias|length }}
+              </h3>
+              <p class="text-muted">Categorías</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-stat shadow-sm">
+            <div class="card-body">
+              <h3 class="text-info">{{ estadisticas.tipos|length }}</h3>
+              <p class="text-muted">Tipos de Archivo</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-stat shadow-sm">
+            <div class="card-body">
+              <h3 class="text-warning">
+                {{ (estadisticas.tamano_total / 1024)|round(2) }} GB
+              </h3>
+              <p class="text-muted">Tamaño Total</p>
+            </div>
+          </div>
+        </div>
       </div>
-    </footer>
+    </div>
+  </section>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Results Section -->
+  <section class="py-4 bg-light">
+    <div class="container">
+      <h3 class="mb-4" id="tituloResultados">Documentos Recientes</h3>
+      <div id="listaResultados">
+        {% for doc in documentos_recientes %}
+        <div class="card doc-card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title text-primary">
+              <a href="{{ doc.url }}" target="_blank" class="text-decoration-none">{{ doc.titulo }}</a>
+            </h5>
+            <h6 class="card-subtitle mb-2 text-muted">
+              <span class="badge bg-secondary">{{ doc.tipo }}</span>
+              <span class="badge bg-info text-dark">{{ doc.metadatos.categoria }}</span>
+              <small class="ms-2"><i class="far fa-calendar-alt"></i> {{ doc.fecha_descarga
+                }}</small>
+            </h6>
+            <p class="card-text text-truncate">
+              {{ doc.texto_contenido[:200] if doc.texto_contenido else 'Sin
+              contenido disponible' }}...
+            </p>
+            <button onclick="verDetallesDocumento({{ doc.numero }})" class="btn btn-sm btn-outline-primary">
+              <i class="fas fa-eye"></i> Ver Detalles
+            </button>
+            {% if doc.url_original %}
+            <a href="{{ doc.url_original }}" target="_blank" class="btn btn-sm btn-outline-success">
+              <i class="fas fa-external-link-alt"></i> Ver Original
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
 
-    <!-- Custom Script -->
-    <script>
-      async function buscarDocumentos(pagina = 1) {
-        const query = document.getElementById("searchInput").value;
-        const categoria = document.getElementById("filtroCategoria").value;
-        const tipo = document.getElementById("filtroTipo").value;
+      <!-- Pagination -->
+      <nav aria-label="Navegación" class="mt-4">
+        <ul class="pagination justify-content-center" id="paginacion">
+          <!-- Generated by JS -->
+        </ul>
+      </nav>
+    </div>
+  </section>
 
-        const btn = document.querySelector(
-          'button[onclick="buscarDocumentos()"]'
-        );
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
-        btn.disabled = true;
+  <!-- Modal para Detalles del Documento -->
+  <div class="modal fade" id="modalDetalles" tabindex="-1" aria-labelledby="modalDetallesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalDetallesLabel">
+            Detalles del Documento
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="modalDetallesContenido">
+          <div class="text-center">
+            <div class="spinner-border" role="status"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        try {
-          const response = await fetch("/api/buscar", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query, categoria, tipo, pagina }),
-          });
+  <!-- Footer -->
+  <footer class="bg-dark text-white text-center py-3 mt-5">
+    <div class="container">
+      <p>
+        &copy; 2025 Proyecto Big Data - {{ universidad }} - Maestría en
+        Analítica
+      </p>
+    </div>
+  </footer>
 
-          const data = await response.json();
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-          if (data.exito) {
-            renderizarResultados(data.documentos);
-            actualizarTitulo(data.total, data.motor);
-            renderizarPaginacion(data.pagina, data.total_paginas);
-          } else {
-            alert("Error en la búsqueda");
-          }
-        } catch (error) {
-          console.error("Error:", error);
-          alert("Ocurrió un error al buscar");
-        } finally {
-          btn.innerHTML = originalText;
-          btn.disabled = false;
+  <!-- Custom Script -->
+  <script>
+    async function buscarDocumentos(pagina = 1) {
+      const query = document.getElementById("searchInput").value;
+      const categoria = document.getElementById("filtroCategoria").value;
+      const tipo = document.getElementById("filtroTipo").value;
+
+      const btn = document.querySelector(
+        'button[onclick="buscarDocumentos()"]'
+      );
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
+      btn.disabled = true;
+
+      try {
+        const response = await fetch("/api/buscar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, categoria, tipo, pagina }),
+        });
+
+        const data = await response.json();
+
+        if (data.exito) {
+          renderizarResultados(data.documentos);
+          actualizarTitulo(data.total, data.motor);
+          renderizarPaginacion(data.pagina, data.total_paginas);
+        } else {
+          alert("Error en la búsqueda");
         }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Ocurrió un error al buscar");
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    function renderizarResultados(docs) {
+      const contenedor = document.getElementById("listaResultados");
+      contenedor.innerHTML = "";
+
+      if (docs.length === 0) {
+        contenedor.innerHTML =
+          '<div class="alert alert-warning text-center">No se encontraron documentos.</div>';
+        return;
       }
 
-      function renderizarResultados(docs) {
-        const contenedor = document.getElementById("listaResultados");
-        contenedor.innerHTML = "";
-
-        if (docs.length === 0) {
-          contenedor.innerHTML =
-            '<div class="alert alert-warning text-center">No se encontraron documentos.</div>';
-          return;
-        }
-
-        docs.forEach((doc) => {
-          const html = `
+      docs.forEach((doc) => {
+        const html = `
                     <div class="card doc-card shadow-sm">
                         <div class="card-body">
                             <h5 class="card-title text-primary">
                                 ${doc.titulo || "Sin Título"}
                             </h5>
                             <h6 class="card-subtitle mb-2 text-muted">
-                                <span class="badge bg-secondary">${
-                                  doc.tipo || "N/A"
-                                }</span>
-                                <span class="badge bg-info text-dark">${
-                                  doc.metadatos?.categoria || "General"
-                                }</span>
-                                <small class="ms-2"><i class="far fa-calendar-alt"></i> ${
-                                  doc.fecha_descarga || ""
-                                }</small>
+                                <span class="badge bg-secondary">${doc.tipo || "N/A"
+          }</span>
+                                <span class="badge bg-info text-dark">${doc.metadatos?.categoria || "General"
+          }</span>
+                                <small class="ms-2"><i class="far fa-calendar-alt"></i> ${doc.fecha_descarga || ""
+          }</small>
                             </h6>
-                            <p class="card-text">${
-                              doc.texto_contenido
-                                ? doc.texto_contenido.substring(0, 200) + "..."
-                                : "Sin contenido disponible"
-                            }</p>
-                            <button onclick="verDetallesDocumento(${
-                              doc.numero
-                            })" class="btn btn-sm btn-outline-primary">
+                            <div class="snippet-container">${doc.snippet
+            ? doc.snippet
+            : doc.texto_contenido
+              ? doc.texto_contenido.substring(0, 200) + "..."
+              : "Sin contenido disponible"
+          }</div>
+                            <button onclick="verDetallesDocumento(${doc.numero
+          })" class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-eye"></i> Ver Detalles
                             </button>
-                            ${
-                              doc.url_original
-                                ? `<a href="${doc.url_original}" target="_blank" class="btn btn-sm btn-outline-success"><i class="fas fa-external-link-alt"></i> Ver Original</a>`
-                                : ""
-                            }
+                            ${doc.url_original
+            ? `<a href="${doc.url_original}" target="_blank" class="btn btn-sm btn-outline-success"><i class="fas fa-external-link-alt"></i> Ver Original</a>`
+            : ""
+          }
                         </div>
                     </div>
                 `;
-          contenedor.innerHTML += html;
-        });
-      }
+        contenedor.innerHTML += html;
+      });
+    }
 
-      async function verDetallesDocumento(numero) {
-        const modal = new bootstrap.Modal(
-          document.getElementById("modalDetalles")
-        );
-        const contenido = document.getElementById("modalDetallesContenido");
+    async function verDetallesDocumento(numero) {
+      const modal = new bootstrap.Modal(
+        document.getElementById("modalDetalles")
+      );
+      const contenido = document.getElementById("modalDetallesContenido");
 
-        contenido.innerHTML =
-          '<div class="text-center"><div class="spinner-border" role="status"></div><p>Cargando...</p></div>';
-        modal.show();
+      contenido.innerHTML =
+        '<div class="text-center"><div class="spinner-border" role="status"></div><p>Cargando...</p></div>';
+      modal.show();
 
-        try {
-          const response = await fetch(`/api/documento/${numero}`);
-          const data = await response.json();
+      try {
+        const response = await fetch(`/api/documento/${numero}`);
+        const data = await response.json();
 
-          if (data.exito && data.documento) {
-            const doc = data.documento;
-            contenido.innerHTML = `
+        if (data.exito && data.documento) {
+          const doc = data.documento;
+          contenido.innerHTML = `
                         <h4>${doc.titulo}</h4>
                         <hr>
                         <div class="row mb-3">
-                            <div class="col-md-6"><strong>Tipo:</strong> <span class="badge bg-secondary">${
-                              doc.tipo
-                            }</span></div>
-                            <div class="col-md-6"><strong>Categoría:</strong> <span class="badge bg-info">${
-                              doc.metadatos?.categoria || "N/A"
-                            }</span></div>
+                            <div class="col-md-6"><strong>Tipo:</strong> <span class="badge bg-secondary">${doc.tipo
+            }</span></div>
+                            <div class="col-md-6"><strong>Categoría:</strong> <span class="badge bg-info">${doc.metadatos?.categoria || "N/A"
+            }</span></div>
                         </div>
                         <div class="row mb-3">
-                            <div class="col-md-6"><strong>Fecha Descarga:</strong> ${
-                              doc.fecha_descarga || "N/A"
-                            }</div>
-                            <div class="col-md-6"><strong>Tamaño:</strong> ${
-                              doc.tamano_mb
-                                ? doc.tamano_mb.toFixed(2) + " MB"
-                                : "N/A"
-                            }</div>
+                            <div class="col-md-6"><strong>Fecha Descarga:</strong> ${doc.fecha_descarga || "N/A"
+            }</div>
+                            <div class="col-md-6"><strong>Tamaño:</strong> ${doc.tamano_mb
+              ? doc.tamano_mb.toFixed(2) + " MB"
+              : "N/A"
+            }</div>
                         </div>
-                        ${
-                          doc.metadatos?.año
-                            ? `<div class="mb-3"><strong>Año:</strong> ${doc.metadatos.año}</div>`
-                            : ""
-                        }
-                        ${
-                          doc.url_original
-                            ? `<div class="mb-3"><strong>URL Original:</strong> <a href="${doc.url_original}" target="_blank">${doc.url_original}</a></div>`
-                            : ""
-                        }
-                        ${
-                          doc.archivo_local
-                            ? `<div class="mb-3"><strong>Archivo Local:</strong> ${doc.archivo_local}</div>`
-                            : ""
-                        }
+                        ${doc.metadatos?.año
+              ? `<div class="mb-3"><strong>Año:</strong> ${doc.metadatos.año}</div>`
+              : ""
+            }
+                        ${doc.url_original
+              ? `<div class="mb-3"><strong>URL Original:</strong> <a href="${doc.url_original}" target="_blank">${doc.url_original}</a></div>`
+              : ""
+            }
+                        ${doc.archivo_local
+              ? `<div class="mb-3"><strong>Archivo Local:</strong> ${doc.archivo_local}</div>`
+              : ""
+            }
                         <hr>
                         <h5>Contenido:</h5>
-                        <div class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto;">
-                            <p>${
-                              doc.texto_contenido ||
-                              "No hay contenido de texto disponible."
-                            }</p>
-                        </div>
+                        ${doc.snippet
+              ? `<div class="alert alert-info"><strong>📍 Fragmento relevante:</strong></div>
+                               <div class="snippet-container">${doc.snippet}</div>`
+              : doc.texto_contenido
+                ? `<div class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto;">
+                                 <p>${doc.texto_contenido.substring(0, 500)}${doc.texto_contenido.length > 500 ? '...' : ''}</p>
+                               </div>`
+                : '<p class="text-muted">No hay contenido de texto disponible.</p>'
+            }
                     `;
-          } else {
-            contenido.innerHTML =
-              '<div class="alert alert-danger">No se pudo cargar el documento.</div>';
-          }
-        } catch (error) {
-          console.error("Error:", error);
+        } else {
           contenido.innerHTML =
-            '<div class="alert alert-danger">Error al cargar los detalles.</div>';
+            '<div class="alert alert-danger">No se pudo cargar el documento.</div>';
         }
+      } catch (error) {
+        console.error("Error:", error);
+        contenido.innerHTML =
+          '<div class="alert alert-danger">Error al cargar los detalles.</div>';
       }
+    }
 
-      function actualizarTitulo(total, motor) {
-        const titulo = document.getElementById("tituloResultados");
-        const motorNombre =
-          motor === "elasticsearch" ? "ElasticSearch" : "MongoDB";
-        titulo.innerHTML = `Resultados: ${total} documentos encontrados <small class="text-muted fs-6">(Motor: ${motorNombre})</small>`;
-      }
+    function actualizarTitulo(total, motor) {
+      const titulo = document.getElementById("tituloResultados");
+      const motorNombre =
+        motor === "elasticsearch" ? "ElasticSearch" : "MongoDB";
+      titulo.innerHTML = `Resultados: ${total} documentos encontrados <small class="text-muted fs-6">(Motor: ${motorNombre})</small>`;
+    }
 
-      function renderizarPaginacion(actual, total) {
-        const paginacion = document.getElementById("paginacion");
-        paginacion.innerHTML = "";
+    function renderizarPaginacion(actual, total) {
+      const paginacion = document.getElementById("paginacion");
+      paginacion.innerHTML = "";
 
-        if (total <= 1) return;
+      if (total <= 1) return;
 
-        // Anterior
-        paginacion.innerHTML += `
+      // Anterior
+      paginacion.innerHTML += `
                 <li class="page-item ${actual === 1 ? "disabled" : ""}">
-                    <a class="page-link" href="#" onclick="buscarDocumentos(${
-                      actual - 1
-                    })">Anterior</a>
+                    <a class="page-link" href="#" onclick="buscarDocumentos(${actual - 1
+        })">Anterior</a>
                 </li>
             `;
 
-        // Páginas (simple logic for now)
-        for (let i = 1; i <= Math.min(total, 5); i++) {
-          paginacion.innerHTML += `
+      // Páginas (simple logic for now)
+      for (let i = 1; i <= Math.min(total, 5); i++) {
+        paginacion.innerHTML += `
                     <li class="page-item ${actual === i ? "active" : ""}">
                         <a class="page-link" href="#" onclick="buscarDocumentos(${i})">${i}</a>
                     </li>
                 `;
-        }
+      }
 
-        // Siguiente
-        paginacion.innerHTML += `
+      // Siguiente
+      paginacion.innerHTML += `
                 <li class="page-item ${actual === total ? "disabled" : ""}">
-                    <a class="page-link" href="#" onclick="buscarDocumentos(${
-                      actual + 1
-                    })">Siguiente</a>
+                    <a class="page-link" href="#" onclick="buscarDocumentos(${actual + 1
+        })">Siguiente</a>
                 </li>
             `;
-      }
-    </script>
-  </body>
+    }
+  </script>
+</body>
+
 </html>

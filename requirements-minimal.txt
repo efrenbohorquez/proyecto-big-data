@@ -1,0 +1,25 @@
+# Versión MÍNIMA para despliegue en Render
+# Solo incluye dependencias necesarias para la app web
+
+# Core Flask Framework
+Flask==3.0.3
+Werkzeug==3.0.3
+
+# Database Connection
+pymongo==4.8.0
+
+# Web Server
+gunicorn==23.0.0
+
+# Environment Variables
+python-dotenv==1.0.1
+
+# HTTP Requests (para APIs básicas)
+requests==2.32.3
+
+# Security & Authentication
+bcrypt==4.2.0
+
+# Elasticsearch (opcional - comentar si no usas)
+elasticsearch==8.15.1
+elastic-transport==8.15.0
