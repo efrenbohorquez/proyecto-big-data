@@ -82,6 +82,7 @@
     <div class="container">
       <a class="navbar-brand" href="/">Proyecto Big Data</a>
       <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="/admin"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
         <a class="nav-link active" href="/documentos">Buscar Documentos</a>
         <a class="nav-link" href="/login">Ingresar</a>
         <a class="nav-link" href="/about">Acerca de</a>
@@ -110,9 +111,9 @@
           <div class="d-flex justify-content-center gap-3">
             <select id="filtroCategoria" class="form-select w-auto">
               <option value="">Todas las Categorías</option>
-              {% for cat in estadisticas.categorias %}
-              <option value="{{ cat.nombre }}">
-                {{ cat.nombre }} ({{ cat.cantidad }})
+              {% for categoria_item in estadisticas.categorias %}
+              <option value="{{ categoria_item.nombre }}">
+                {{ categoria_item.nombre }} ({{ categoria_item.cantidad }})
               </option>
               {% endfor %}
             </select>
@@ -232,7 +233,10 @@
             <div class="spinner-border" role="status"></div>
           </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-outline-primary" id="btnResumirIA" onclick="resumirDocumento()">
+            <i class="fas fa-magic"></i> Resumir con IA
+          </button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
             Cerrar
           </button>
@@ -256,6 +260,8 @@
 
   <!-- Custom Script -->
   <script>
+    let documentoActualId = null;
+
     async function buscarDocumentos(pagina = 1) {
       const query = document.getElementById("searchInput").value;
       const categoria = document.getElementById("filtroCategoria").value;
@@ -340,10 +346,18 @@
     }
 
     async function verDetallesDocumento(numero) {
+      documentoActualId = numero;
       const modal = new bootstrap.Modal(
         document.getElementById("modalDetalles")
       );
       const contenido = document.getElementById("modalDetallesContenido");
+      const btnIA = document.getElementById("btnResumirIA");
+
+      if (btnIA) {
+        btnIA.style.display = 'block';
+        btnIA.disabled = false;
+        btnIA.innerHTML = '<i class="fas fa-magic"></i> Resumir con IA';
+      }
 
       contenido.innerHTML =
         '<div class="text-center"><div class="spinner-border" role="status"></div><p>Cargando...</p></div>';
@@ -385,6 +399,19 @@
               : ""
             }
                         <hr>
+                        
+                        <!-- Área de Resumen IA -->
+                        <div id="areaResumenIA" class="mb-3" style="display:none;">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <i class="fas fa-robot"></i> Análisis de Inteligencia Artificial
+                                </div>
+                                <div class="card-body bg-light">
+                                    <div id="textoResumenIA"></div>
+                                </div>
+                            </div>
+                        </div>
+
                         <h5>Contenido:</h5>
                         ${doc.snippet
               ? `<div class="alert alert-info"><strong>📍 Fragmento relevante:</strong></div>
@@ -404,6 +431,46 @@
         console.error("Error:", error);
         contenido.innerHTML =
           '<div class="alert alert-danger">Error al cargar los detalles.</div>';
+      }
+    }
+
+    async function resumirDocumento() {
+      if (!documentoActualId) return;
+
+      const btn = document.getElementById("btnResumirIA");
+      const areaResumen = document.getElementById("areaResumenIA");
+      const textoResumen = document.getElementById("textoResumenIA");
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analizando...';
+
+      try {
+        const response = await fetch('/api/analizar-documento', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: documentoActualId })
+        });
+
+        const data = await response.json();
+
+        if (data.exito) {
+          areaResumen.style.display = 'block';
+          let htmlResumen = data.resumen
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+
+          textoResumen.innerHTML = htmlResumen;
+          btn.innerHTML = '<i class="fas fa-check"></i> Analizado';
+        } else {
+          alert('Error: ' + data.mensaje);
+          btn.innerHTML = '<i class="fas fa-magic"></i> Intentar de nuevo';
+          btn.disabled = false;
+        }
+      } catch (error) {
+        console.error("Error IA:", error);
+        alert('Error de conexión con el servicio de IA');
+        btn.innerHTML = '<i class="fas fa-magic"></i> Intentar de nuevo';
+        btn.disabled = false;
       }
     }
 

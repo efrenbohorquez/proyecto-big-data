@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - Proyecto Big Data</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .header-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 0;
+        }
+
+        .user-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .user-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .badge-role {
+            font-size: 0.85rem;
+            padding: 0.35em 0.65em;
+        }
+
+        .badge-admin {
+            background-color: #dc3545;
+        }
+
+        .badge-editor {
+            background-color: #fd7e14;
+        }
+
+        .badge-viewer {
+            background-color: #6c757d;
+        }
+
+        .action-btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f1f3f5;
+        }
+
+        .stats-card {
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+
+        .stats-card:hover {
+            transform: translateX(5px);
+        }
+
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Proyecto Big Data</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/admin">Dashboard</a>
+                <a class="nav-link active" href="/admin/usuarios">Usuarios</a>
+                <a class="nav-link" href="/documentos">Documentos</a>
+                <a class="nav-link" href="/logout">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <section class="header-gradient">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2><i class="fas fa-users"></i> Gestión de Usuarios</h2>
+                    <p class="mb-0">Administra usuarios, roles y permisos del sistema</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-light btn-lg" onclick="mostrarModalCrear()">
+                        <i class="fas fa-plus"></i> Nuevo Usuario
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Estadísticas -->
+    <section class="py-4">
+        <div class="container">
+            <div class="row" id="statsContainer">
+                <div class="col-md-3">
+                    <div class="card stats-card border-primary">
+                        <div class="card-body">
+                            <h3 class="text-primary" id="totalUsuarios">0</h3>
+                            <p class="text-muted mb-0">Total Usuarios</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card border-danger">
+                        <div class="card-body">
+                            <h3 class="text-danger" id="totalAdmins">0</h3>
+                            <p class="text-muted mb-0">Administradores</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card border-warning">
+                        <div class="card-body">
+                            <h3 class="text-warning" id="totalEditores">0</h3>
+                            <p class="text-muted mb-0">Editores</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card border-secondary">
+                        <div class="card-body">
+                            <h3 class="text-secondary" id="totalViewers">0</h3>
+                            <p class="text-muted mb-0">Visualizadores</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filtros y Búsqueda -->
+    <section class="py-3 bg-white">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" id="searchInput" class="form-control"
+                            placeholder="Buscar por nombre, email o username...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select id="filtroRol" class="form-select">
+                        <option value="">Todos los Roles</option>
+                        <option value="admin">Administradores</option>
+                        <option value="editor">Editores</option>
+                        <option value="viewer">Visualizadores</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="filtroActivo" class="form-select">
+                        <option value="">Todos los Estados</option>
+                        <option value="true">Activos</option>
+                        <option value="false">Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-primary" onclick="cargarUsuarios()">
+                        <i class="fas fa-sync"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tabla de Usuarios -->
+    <section class="py-4">
+        <div class="container">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Usuario</th>
+                                    <th>Email</th>
+                                    <th>Nombre Completo</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                    <th>Última Conexión</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usuariosTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginación -->
+                    <nav aria-label="Navegación de usuarios">
+                        <ul class="pagination justify-content-center" id="paginacion"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Crear/Editar Usuario -->
+    <div class="modal fade" id="modalUsuario" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalUsuarioTitulo">Nuevo Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formUsuario">
+                        <input type="hidden" id="userId">
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username *</label>
+                            <input type="text" class="form-control" id="username" required>
+                            <div class="form-text">Debe ser único en el sistema</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nombreCompleto" class="form-label">Nombre Completo</label>
+                            <input type="text" class="form-control" id="nombreCompleto">
+                        </div>
+
+                        <div class="mb-3" id="passwordGroup">
+                            <label for="password" class="form-label">Contraseña *</label>
+                            <input type="password" class="form-control" id="password">
+                            <div class="form-text">Mínimo 6 caracteres</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="rol" class="form-label">Rol *</label>
+                            <select class="form-select" id="rol" required>
+                                <option value="viewer">Visualizador (Solo lectura)</option>
+                                <option value="editor">Editor (Crear y editar)</option>
+                                <option value="admin">Administrador (Todos los permisos)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="activo" checked>
+                                <label class="form-check-label" for="activo">Usuario Activo</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarUsuario()">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cambiar Contraseña -->
+    <div class="modal fade" id="modalPassword" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cambiar Contraseña</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="passwordUserId">
+                    <div class="mb-3">
+                        <label for="nuevaPassword" class="form-label">Nueva Contraseña</label>
+                        <input type="password" class="form-control" id="nuevaPassword" minlength="6">
+                        <div class="form-text">Mínimo 6 caracteres</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="cambiarPassword()">
+                        <i class="fas fa-key"></i> Cambiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript -->
+    <script>
+        // Variables globales
+        let paginaActual = 1;
+        let usuarioEditando = null;
+
+        // Cargar estadísticas y usuarios al iniciar
+        document.addEventListener('DOMContentLoaded', function () {
+            cargarEstadisticas();
+            cargarUsuarios();
+
+            // Event listeners para filtros
+            document.getElementById('searchInput').addEventListener('input', debounce(cargarUsuarios, 500));
+            document.getElementById('filtroRol').addEventListener('change', cargarUsuarios);
+            document.getElementById('filtroActivo').addEventListener('change', cargarUsuarios);
+        });
+
+        // Función debounce para búsqueda
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Cargar estadísticas
+        async function cargarEstadisticas() {
+            try {
+                const response = await fetch('/api/usuarios/estadisticas');
+                const data = await response.json();
+
+                if (data.exito) {
+                    document.getElementById('totalUsuarios').textContent = data.total_usuarios;
+                    document.getElementById('totalAdmins').textContent = data.por_rol.admin || 0;
+                    document.getElementById('totalEditores').textContent = data.por_rol.editor || 0;
+                    document.getElementById('totalViewers').textContent = data.por_rol.viewer || 0;
+                }
+            } catch (error) {
+                console.error('Error al cargar estadísticas:', error);
+            }
+        }
+
+        // Cargar usuarios
+        async function cargarUsuarios(pagina = 1) {
+            try {
+                const busqueda = document.getElementById('searchInput').value;
+                const rol = document.getElementById('filtroRol').value;
+                const activo = document.getElementById('filtroActivo').value;
+
+                const params = new URLSearchParams({
+                    pagina: pagina,
+                    por_pagina: 10,
+                    ...(busqueda && { busqueda }),
+                    ...(rol && { rol }),
+                    ...(activo && { activo })
+                });
+
+                const response = await fetch(`/api/usuarios?${params}`);
+                const data = await response.json();
+
+                if (data.exito) {
+                    renderizarUsuarios(data.usuarios);
+                    renderizarPaginacion(data.pagina, data.total_paginas);
+                    paginaActual = data.pagina;
+                } else {
+                    mostrarError('Error al cargar usuarios');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión');
+            }
+        }
+
+        // Renderizar tabla de usuarios
+        function renderizarUsuarios(usuarios) {
+            const tbody = document.getElementById('usuariosTableBody');
+
+            if (usuarios.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No se encontraron usuarios</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = usuarios.map(user => `
+                <tr>
+                    <td>${user.user_id}</td>
+                    <td><strong>${user.username}</strong></td>
+                    <td>${user.email}</td>
+                    <td>${user.nombre_completo || '-'}</td>
+                    <td><span class="badge badge-role badge-${user.rol}">${getRolLabel(user.rol)}</span></td>
+                    <td>${user.activo ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>'}</td>
+                    <td>${user.ultima_conexion ? formatearFecha(user.ultima_conexion) : 'Nunca'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary action-btn" onclick="editarUsuario(${user.user_id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning action-btn" onclick="mostrarModalPassword(${user.user_id})" title="Cambiar contraseña">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger action-btn" onclick="eliminarUsuario(${user.user_id}, '${user.username}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Renderizar paginación
+        function renderizarPaginacion(actual, total) {
+            const paginacion = document.getElementById('paginacion');
+
+            if (total <= 1) {
+                paginacion.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // Anterior
+            html += `
+                <li class="page-item ${actual === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="cargarUsuarios(${actual - 1}); return false;">Anterior</a>
+                </li>
+            `;
+
+            // Páginas
+            for (let i = 1; i <= Math.min(total, 5); i++) {
+                html += `
+                    <li class="page-item ${actual === i ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="cargarUsuarios(${i}); return false;">${i}</a>
+                    </li>
+                `;
+            }
+
+            // Siguiente
+            html += `
+                <li class="page-item ${actual === total ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="cargarUsuarios(${actual + 1}); return false;">Siguiente</a>
+                </li>
+            `;
+
+            paginacion.innerHTML = html;
+        }
+
+        // Mostrar modal crear
+        function mostrarModalCrear() {
+            usuarioEditando = null;
+            document.getElementById('modalUsuarioTitulo').textContent = 'Nuevo Usuario';
+            document.getElementById('formUsuario').reset();
+            document.getElementById('userId').value = '';
+            document.getElementById('passwordGroup').style.display = 'block';
+            document.getElementById('password').required = true;
+
+            const modal = new bootstrap.Modal(document.getElementById('modalUsuario'));
+            modal.show();
+        }
+
+        // Editar usuario
+        async function editarUsuario(userId) {
+            try {
+                const response = await fetch(`/api/usuarios/${userId}`);
+                const data = await response.json();
+
+                if (data.exito) {
+                    usuarioEditando = data.usuario;
+                    document.getElementById('modalUsuarioTitulo').textContent = 'Editar Usuario';
+                    document.getElementById('userId').value = data.usuario.user_id;
+                    document.getElementById('username').value = data.usuario.username;
+                    document.getElementById('username').disabled = true; // No permitir cambiar username
+                    document.getElementById('email').value = data.usuario.email;
+                    document.getElementById('nombreCompleto').value = data.usuario.nombre_completo || '';
+                    document.getElementById('rol').value = data.usuario.rol;
+                    document.getElementById('activo').checked = data.usuario.activo;
+                    document.getElementById('passwordGroup').style.display = 'none';
+                    document.getElementById('password').required = false;
+
+                    const modal = new bootstrap.Modal(document.getElementById('modalUsuario'));
+                    modal.show();
+                } else {
+                    mostrarError('Error al cargar usuario');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión');
+            }
+        }
+
+        // Guardar usuario (crear o actualizar)
+        async function guardarUsuario() {
+            const userId = document.getElementById('userId').value;
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const nombreCompleto = document.getElementById('nombreCompleto').value;
+            const password = document.getElementById('password').value;
+            const rol = document.getElementById('rol').value;
+            const activo = document.getElementById('activo').checked;
+
+            // Validaciones
+            if (!username || !email || !rol) {
+                mostrarError('Por favor completa todos los campos requeridos');
+                return;
+            }
+
+            if (!userId && !password) {
+                mostrarError('La contraseña es requerida para nuevos usuarios');
+                return;
+            }
+
+            if (password && password.length < 6) {
+                mostrarError('La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+
+            try {
+                const datos = {
+                    username,
+                    email,
+                    nombre_completo: nombreCompleto,
+                    rol,
+                    activo
+                };
+
+                if (password) {
+                    datos.password = password;
+                }
+
+                let response;
+                if (userId) {
+                    // Actualizar
+                    response = await fetch(`/api/usuarios/${userId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datos)
+                    });
+                } else {
+                    // Crear
+                    response = await fetch('/api/usuarios', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datos)
+                    });
+                }
+
+                const data = await response.json();
+
+                if (data.exito || response.status === 201) {
+                    mostrarExito(userId ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente');
+                    bootstrap.Modal.getInstance(document.getElementById('modalUsuario')).hide();
+                    cargarUsuarios(paginaActual);
+                    cargarEstadisticas();
+                    document.getElementById('username').disabled = false;
+                } else {
+                    mostrarError(data.mensaje || 'Error al guardar usuario');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión');
+            }
+        }
+
+        // Mostrar modal cambiar contraseña
+        function mostrarModalPassword(userId) {
+            document.getElementById('passwordUserId').value = userId;
+            document.getElementById('nuevaPassword').value = '';
+
+            const modal = new bootstrap.Modal(document.getElementById('modalPassword'));
+            modal.show();
+        }
+
+        // Cambiar contraseña
+        async function cambiarPassword() {
+            const userId = document.getElementById('passwordUserId').value;
+            const nuevaPassword = document.getElementById('nuevaPassword').value;
+
+            if (!nuevaPassword || nuevaPassword.length < 6) {
+                mostrarError('La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/usuarios/${userId}/password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: nuevaPassword })
+                });
+
+                const data = await response.json();
+
+                if (data.exito) {
+                    mostrarExito('Contraseña cambiada exitosamente');
+                    bootstrap.Modal.getInstance(document.getElementById('modalPassword')).hide();
+                } else {
+                    mostrarError(data.mensaje || 'Error al cambiar contraseña');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión');
+            }
+        }
+
+        // Eliminar usuario
+        async function eliminarUsuario(userId, username) {
+            if (!confirm(`¿Estás seguro de eliminar al usuario "${username}"?\n\nEsta acción no se puede deshacer.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/usuarios/${userId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.exito) {
+                    mostrarExito('Usuario eliminado exitosamente');
+                    cargarUsuarios(paginaActual);
+                    cargarEstadisticas();
+                } else {
+                    mostrarError(data.error || 'Error al eliminar usuario');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión');
+            }
+        }
+
+        // Utilidades
+        function getRolLabel(rol) {
+            const labels = {
+                'admin': 'Admin',
+                'editor': 'Editor',
+                'viewer': 'Viewer'
+            };
+            return labels[rol] || rol;
+        }
+
+        function formatearFecha(fecha) {
+            if (!fecha) return '-';
+            const date = new Date(fecha);
+            return date.toLocaleString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function mostrarExito(mensaje) {
+            alert('✅ ' + mensaje);
+        }
+
+        function mostrarError(mensaje) {
+            alert('❌ ' + mensaje);
+        }
+    </script>
+</body>
+
+</html>

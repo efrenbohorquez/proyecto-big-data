@@ -29,3 +29,6 @@ certifi==2024.8.30
 charset-normalizer==3.3.2
 idna==3.10
 elastic-transport==8.15.0
+
+# AI Services
+google-generativeai==0.8.5
