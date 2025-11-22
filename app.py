@@ -25,9 +25,9 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'default_key_if_not_found') 
 
 # Variables de la aplicación (para pasar a los templates)
-version_app = "1.1" # Versión del proyecto
-creador_app = "Efren Bohorquez Vargas" # Nombre del creador
-universidad_app = "Universidad Central" # Universidad
+version_app = "1.2" # Versión del proyecto
+creador_app = "Efren Bohorquez Vargas" # Maestría en Analítica de Datos
+universidad_app = "Universidad Central" # Proyecto de Grado
 
 # Instanciación de variables de entorno para las conexiones
 MONGO_URI = os.getenv('MONGO_URI')
